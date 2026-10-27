@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>{{APP_TITLE}}</title>
+<meta name="theme-color" content="#0d1b3e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="{{APP_TITLE}}">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="{{APP_ICON}}">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="top-area">
+    <div class="page-header serif">
+      <div class="page-title">{{APP_TITLE}}</div>
+      <div class="page-sub">{{APP_SUBTITLE}}</div>
+      <form class="logout-form" method="POST" action="/logout">
+        <button type="submit" class="logout-btn" id="logout-btn" aria-label="退出登录" title="退出登录"></button>
+      </form>
+    </div>
+    <div class="tab-bar" id="tab-bar">
+      <div class="tab active" id="tab-0" data-tab="0">状态</div>
+      <div class="tab" id="tab-1" data-tab="1">日历</div>
+      <div class="tab-line" id="tab-line"></div>
+    </div>
+  </div>
+
+  <div class="swipe-container" id="swipe-container">
+    <div class="swipe-wrapper" id="swipe-wrapper">
+
+      <div class="swipe-page">
+        <div class="section section-top" id="status-section">
+          <div class="loading-state">加载中...</div>
+        </div>
+        <div class="stats-grid" id="stats-grid" hidden>
+          <div class="stat-item"><div class="stat-value serif" id="stat-last">—</div><div class="stat-label">上次经期</div></div>
+          <div class="stat-item"><div class="stat-value serif" id="stat-cycle">—</div><div class="stat-label">平均周期</div></div>
+          <div class="stat-item"><div class="stat-value serif stat-predict" id="stat-next">—</div><div class="stat-label">预测下次</div></div>
+        </div>
+        <div class="section" id="history-section" hidden>
+          <div class="hist-title">历史记录</div>
+          <div id="history-list"></div>
+        </div>
+      </div>
+
+      <div class="swipe-page">
+        <div class="cal-nav">
+          <div class="serif">
+            <div class="cal-month" id="cal-month-title"></div>
+            <div class="cal-year" id="cal-year-title"></div>
+          </div>
+          <div class="cal-arrows">
+            <button type="button" class="cal-arr" id="cal-prev" aria-label="上个月"></button>
+            <button type="button" class="cal-today-btn" id="cal-today">今天</button>
+            <button type="button" class="cal-arr" id="cal-next" aria-label="下个月"></button>
+          </div>
+        </div>
+        <div class="cal-wrap">
+          <div class="wday-row">
+            <div class="wday">日</div><div class="wday">一</div><div class="wday">二</div>
+            <div class="wday">三</div><div class="wday">四</div><div class="wday">五</div><div class="wday">六</div>
+          </div>
+          <div class="days-grid" id="days-grid"></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot c-period"></div>月经期</div>
+          <div class="legend-item"><div class="legend-dot c-follicular"></div>卵泡期</div>
+          <div class="legend-item"><div class="legend-dot c-ovulation"></div>排卵期</div>
+          <div class="legend-item"><div class="legend-dot c-luteal"></div>黄体期</div>
+          <div class="legend-item"><div class="legend-dot c-today"></div>今天</div>
+        </div>
+        <div class="phase-strip" id="phase-strip"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-overlay">
+  <div class="sheet serif" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-date-label" id="sheet-date"></div>
+    <div class="sheet-title" id="sheet-title">记录这一天</div>
+    <div class="sheet-options">
+      <div class="sheet-opt active" data-opt="period">
+        <div class="sheet-opt-dot c-period"></div>
+        <div class="sheet-opt-info"><div class="sheet-opt-name">月经期开始</div><div class="sheet-opt-sub">自动标注后续天数，重新计算预测</div></div>
+        <div class="sheet-check"></div>
+      </div>
+      <div class="sheet-opt" data-opt="ovulation">
+        <div class="sheet-opt-dot c-ovulation"></div>
+        <div class="sheet-opt-info"><div class="sheet-opt-name">排卵期</div><div class="sheet-opt-sub">记录感觉到的排卵期日期</div></div>
+        <div class="sheet-check"></div>
+      </div>
+      <div class="sheet-opt" data-opt="mark">
+        <div class="sheet-opt-dot c-mark"></div>
+        <div class="sheet-opt-info"><div class="sheet-opt-name">仅标记</div><div class="sheet-opt-sub">标注这天，不影响预测计算</div></div>
+        <div class="sheet-check"></div>
+      </div>
+      <div class="sheet-opt" data-opt="clear">
+        <div class="sheet-opt-dot c-clear"></div>
+        <div class="sheet-opt-info"><div class="sheet-opt-name">清除记录</div><div class="sheet-opt-sub">移除这天的所有标注</div></div>
+        <div class="sheet-check"></div>
+      </div>
+    </div>
+    <div class="duration-row" id="duration-row">
+      <span class="duration-label">经期天数</span>
+      <div class="duration-ctrl">
+        <button type="button" class="dur-btn" id="dur-minus" aria-label="减少一天"></button>
+        <div class="dur-val" id="dur-val">5</div>
+        <button type="button" class="dur-btn" id="dur-plus" aria-label="增加一天"></button>
+      </div>
+    </div>
+    <div class="sheet-btns">
+      <button type="button" class="btn-cancel" id="btn-cancel">取消</button>
+      <button type="button" class="btn-save" id="btn-save">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-overlay" hidden>
+  <div class="confirm-box serif" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text">
+    <div class="confirm-text" id="confirm-text"></div>
+    <div class="sheet-btns">
+      <button type="button" class="btn-cancel" id="confirm-no">取消</button>
+      <button type="button" class="btn-save" id="confirm-yes">删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>
